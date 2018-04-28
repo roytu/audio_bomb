@@ -1,45 +1,38 @@
-#include "defines.h"
-#include "music.h"
+#include <SD.h>
+#include "TMRpcm.h"
 
-// Extra buttons
-const int CLEAR = 10;
+TMRpcm tmrpcm;
 
-const int KEYS = 10;
-int keys[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, CLEAR};
-int probe_ins[] = {7, 5, 5, 5, 5, 6, 6, 6, 6, 7};
-int probe_outs[] = {10, 11, 10, 9, 8, 11, 10, 9, 8, 11, 9};
+char* FILENAME = "mac.wav";
 
-int getKeyPress() {
-  for (int i = 4; i <= 11; i++) {
-    pinMode(i, OUTPUT);
-    digitalWrite(i, LOW);
-  }
-  for (int i = 0; i < KEYS; i++) {
-    pinMode(probe_outs[i], OUTPUT);
-    pinMode(probe_ins[i], INPUT);
-    digitalWrite(probe_outs[i], HIGH);
-    if (digitalRead(probe_ins[i]) == HIGH) {
-      digitalWrite(probe_outs[i], LOW);
-      pinMode(probe_ins[i], OUTPUT);
-      return keys[i];
+int play() {
+    tmrpcm.speakerPin = 9;
+    tmrpcm.setVolume(4);
+    tmrpcm.play(FILENAME);
+
+    /*
+    int res = tmrpcm.wavInfo(FILENAME);
+    if (res == 0) {
+        Serial.println("Error reading WAV header");
+        return 0;
     }
-    digitalWrite(probe_outs[i], LOW);
-    pinMode(probe_ins[i], OUTPUT);
-  }
-  return -1;
+    */
 }
 
 void setup() {
-  pinMode(SPEAKER_PIN, OUTPUT);
   Serial.begin(9600);
-  playSong(1);
+  Serial.print("Reading file: ");
+  Serial.println(FILENAME);
+  if (!SD.begin(4)) {
+      Serial.println("Couldn't open SD");
+      return;
+  }
+  if (!play()) {
+      return;
+  }
+  Serial.println("Playing");
+  return;
 }
 
 void loop() {
-  int key = getKeyPress();
-  if (key >= 0) {
-    Serial.println("Playing song:");
-    Serial.println(key);
-    playSong(key);
-  }
 }
